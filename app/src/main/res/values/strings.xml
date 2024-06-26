@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">AppForGuap</string>
+    <string name="hi_14">Приложение 14 кафедры</string>
+    <string name="logo_to_enter_desc">Логотип при входе</string>
+    <string name="hi_made_by_1241">Сделано студентами 1241</string>
+    <string name="register_btn">Регистрация</string>
+    <string name="sign_in_btn">Вход</string>
+    <string name="enter_email_desc">Приложение не поддерживает вход через pro.guap, \nпоэтому предлагаем вам зарегистрироваться \nиспользуя ваш email</string>
+    <string name="register_tap">зарегистрируйтесь</string>
+    <string name="not_yet_acc_desc">Ещё нет аккаунта?</string>
+    <string name="app_desc">Приложение оценки преподователей\n кафедры 14 СПБ ГУАП</string>
+    <string name="remember_enter_check">Запомнить вход</string>
+    <string name="group_number_register">Номер группы</string>
+    <string name="password_register_enter">Пароль</string>
+    <string name="email_register_enter">E-mail</string>
+    <string name="register_logo">registerLogo</string>
+</resources>
