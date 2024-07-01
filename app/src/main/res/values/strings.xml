@@ -14,4 +14,5 @@
     <string name="password_register_enter">Пароль</string>
     <string name="email_register_enter">E-mail</string>
     <string name="register_logo">registerLogo</string>
+    <string name="back_to_sing_in_click">вернуться назад</string>
 </resources>

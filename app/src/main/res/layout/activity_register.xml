@@ -8,7 +8,7 @@
     tools:context=".RegisterActivity">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/GUAPimage"
         android:layout_width="229dp"
         android:layout_height="173dp"
         android:layout_marginTop="24dp"
@@ -29,7 +29,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/checkBox"
+        app:layout_constraintTop_toBottomOf="@+id/remember_enter"
         tools:ignore="VisualLintOverlap" />
 
     <Button
@@ -42,43 +42,43 @@
         android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/checkBox" />
+        app:layout_constraintTop_toBottomOf="@+id/remember_enter" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/why_email_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="120dp"
         android:text="@string/enter_email_desc"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/checkBox"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintStart_toStartOf="@+id/remember_enter"
+        app:layout_constraintTop_toBottomOf="@+id/remember_enter" />
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/click_to_register"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="@string/register_tap"
         android:textAllCaps="false"
         android:textStyle="italic"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintTop_toTopOf="@+id/textView2" />
+        app:layout_constraintStart_toEndOf="@+id/do_not_have_acc_text"
+        app:layout_constraintTop_toTopOf="@+id/do_not_have_acc_text" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/do_not_have_acc_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="@string/not_yet_acc_desc"
-        app:layout_constraintEnd_toEndOf="@+id/buttonForRegister"
+        app:layout_constraintEnd_toEndOf="@+id/buttonForSignIn"
         app:layout_constraintHorizontal_bias="0.349"
-        app:layout_constraintStart_toStartOf="@+id/checkBox"
-        app:layout_constraintTop_toBottomOf="@+id/buttonForRegister" />
+        app:layout_constraintStart_toStartOf="@+id/remember_enter"
+        app:layout_constraintTop_toBottomOf="@+id/buttonForSignIn" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/app_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -86,10 +86,10 @@
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/GUAPimage" />
 
     <EditText
-        android:id="@+id/editTextTextEmailAddress"
+        android:id="@+id/etEmail"
         android:layout_width="354dp"
         android:layout_height="48dp"
         android:layout_marginTop="92dp"
@@ -100,10 +100,10 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintTop_toBottomOf="@+id/app_desc" />
 
     <EditText
-        android:id="@+id/editTextTextPassword"
+        android:id="@+id/etPassword"
         android:layout_width="354dp"
         android:layout_height="48dp"
         android:layout_marginTop="36dp"
@@ -114,11 +114,11 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/editTextTextEmailAddress"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextEmailAddress" />
+        app:layout_constraintStart_toStartOf="@+id/etEmail"
+        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
     <EditText
-        android:id="@+id/editTextNumberPassword"
+        android:id="@+id/etGroup"
         android:layout_width="354dp"
         android:layout_height="48dp"
         android:layout_marginTop="36dp"
@@ -129,19 +129,30 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/editTextTextPassword"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextPassword" />
+        app:layout_constraintStart_toStartOf="@+id/etPassword"
+        app:layout_constraintTop_toBottomOf="@+id/etPassword" />
 
     <CheckBox
-        android:id="@+id/checkBox"
+        android:id="@+id/remember_enter"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_marginTop="4dp"
         android:text="@string/remember_enter_check"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/editTextNumberPassword"
-        app:layout_constraintTop_toBottomOf="@+id/editTextNumberPassword" />
+        app:layout_constraintStart_toStartOf="@+id/etGroup"
+        app:layout_constraintTop_toBottomOf="@+id/etGroup" />
+
+    <TextView
+        android:id="@+id/back_to_sign_in"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/back_to_sing_in_click"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonForRegister" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
