@@ -19,13 +19,7 @@ data class Position(
     val title: String,
     val institute: String
 )
-// Фильтры
-data class FilterOption(val value: String, val text: String)
-data class Filters(
-    val positions: List<FilterOption>,
-    val faculties: List<FilterOption>,
-    val subunits: List<FilterOption>
-)
+
 // Парсинг страниц
 suspend fun parseAllProfessors(): List<Professor> = coroutineScope {
     val baseUrl = "https://pro.guap.ru/professors?page="
@@ -101,34 +95,3 @@ suspend fun parseProfessorPage(url: String): List<Position> = withContext(Dispat
         emptyList()
     }
 }
-// Получение списка фильтров (выборка)
-fun extractFilters(url: String): Filters {
-    val doc: Document = Jsoup.connect(url).get()
-
-    val positions = extractFilterOptions(doc, "#position")
-    val faculties = extractFilterOptions(doc, "#facultyWithChairs")
-    val subunits = extractFilterOptions(doc, "#subunit")
-
-    return Filters(positions, faculties, subunits)
-}
-// Парсинг фильтров
-fun extractFilterOptions(doc: Document, selector: String): List<FilterOption> {
-    val options = mutableListOf<FilterOption>()
-    val elements = doc.select("$selector option")
-
-    for (element in elements) {
-        val value = element.attr("value").trim()
-        val text = element.text().trim()
-        options.add(FilterOption(value, text))
-    }
-
-    return options
-}
-
-// Извлечение фильтров
-/*
-val filters = extractFilters("https://pro.guap.ru/professors")
-println("Positions: ${filters.positions}")
-println("Faculties: ${filters.faculties}")
-println("Subunits: ${filters.subunits}")
-*/

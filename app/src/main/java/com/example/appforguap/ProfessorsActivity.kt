@@ -1,24 +1,24 @@
 package com.example.appforguap
 
 import android.os.Bundle
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import android.view.*
-import android.widget.*
-import android.graphics.*
-import android.content.Context
-
-
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Transformation
+import android.view.*
 
 class ProfessorsActivity : AppCompatActivity() {
+
     private lateinit var recyclerView: RecyclerView
+    lateinit var searchView: SearchView
+    private lateinit var adapter: ProfessorsAdapter
+    private var allProfessors: List<Professor> = listOf()
+    private var filters: Filters? = null
+    private var currentFilters: CurrentFilters = CurrentFilters()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,21 +27,102 @@ class ProfessorsActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         recyclerView = findViewById(R.id.recyclerView)
+        searchView = findViewById(R.id.searchView)
+        val searchButton: ImageView = findViewById(R.id.searchButton)
+        val filterButton: ImageView = findViewById(R.id.filterButton)
+
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         GlobalScope.launch(Dispatchers.IO) {
-            val allProfessors = parseAllProfessors()
+            allProfessors = parseAllProfessors()
+            filters = extractFilters()
 
             launch(Dispatchers.Main) {
-                val adapter = ProfessorsAdapter(allProfessors)
+                adapter = ProfessorsAdapter(allProfessors)
                 recyclerView.adapter = adapter
             }
+        }
+
+        setupSearchButton(searchButton)
+        setupSearchView()
+        setupFilterButton(filterButton)
+    }
+    // Настрока кнопки поиска
+    fun setupSearchButton(searchButton: ImageView) {
+        searchButton.setOnClickListener {
+            if (searchView.visibility == View.GONE) {
+                searchView.visibility = View.VISIBLE
+                searchView.isIconified = false
+            } else {
+                searchView.visibility = View.GONE
+            }
+        }
+    }
+    // Настройка окна ввода для поиска
+    fun setupSearchView() {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                newText?.let {
+                    val filteredList = allProfessors.filter { professor ->
+                        professor.name.contains(newText, ignoreCase = true) ||
+                                professor.positions.any { position ->
+                                    position.title.contains(newText, ignoreCase = true)
+                                }
+                    }.filter { professor ->
+                        val matchesPosition = currentFilters.position?.let { filterOption ->
+                            professor.positions.any { pos -> pos.title in filterOption.text || filterOption.value.toInt() == 0 }
+                        } ?: true
+
+                        val matchesFaculty = currentFilters.faculty?.let { filterOption ->
+                            professor.positions.any { pos -> pos.institute in filterOption.text || filterOption.value.toInt() == 0 }
+                        } ?: true
+
+                        val matchesSubunit = currentFilters.subunit?.let { filterOption ->
+                            professor.positions.any { pos -> pos.department in filterOption.text || filterOption.value.toInt() == 0 }
+                        } ?: true
+
+                        matchesPosition && matchesFaculty && matchesSubunit
+                    }
+                    adapter.updateList(filteredList)
+                }
+                return true
+            }
+        })
+    }
+
+    // Настройка кнопки для открытия окна фильтрации
+    fun setupFilterButton(filterButton: ImageView) {
+        filterButton.setOnClickListener {
+            showFilterDialog()
+        }
+    }
+
+    // Показ окна фильтрации
+    fun showFilterDialog() {
+        filters?.let {
+            ProfessorsHelper.setupFilterDialog(
+                this,
+                allProfessors,
+                adapter,
+                it,
+                currentFilters,
+                onApply = { updatedFilters ->
+                    currentFilters = updatedFilters
+                },
+                onReset = {
+                    currentFilters = CurrentFilters()
+                }
+            )
         }
     }
 }
 
 // Адаптер для RecyclerView
-class ProfessorsAdapter(private val professors: List<Professor>) :
+class ProfessorsAdapter(var professors: List<Professor>) :
     RecyclerView.Adapter<ProfessorsAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -66,63 +147,14 @@ class ProfessorsAdapter(private val professors: List<Professor>) :
         return professors.size
     }
 
+    fun updateList(newProfessors: List<Professor>) {
+        professors = newProfessors
+        notifyDataSetChanged()
+    }
+
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
         val nameTextView: TextView = itemView.findViewById(R.id.nameTextView)
         val positionsTextView: TextView = itemView.findViewById(R.id.positionsTextView)
-    }
-}
-// Трансформация изображения (Можно вынести в отдельный файл)
-fun loadImageWithRotation(context: Context, imageUrl: String, imageView: ImageView) {
-    Picasso.get()
-        .load(imageUrl)
-        .transform(RoundedCornersTransformation(75))
-        .into(imageView)
-}
-// Функция для округления изображения преподавателей (Можно вынести в отдельный файл)
-class RoundedCornersTransformation(private val radius: Int) : Transformation {
-
-    override fun key(): String {
-        return "rounded_corners(radius=$radius)"
-    }
-
-    override fun transform(source: Bitmap): Bitmap {
-        val minSize = minOf(source.width, source.height)
-
-        val scale = radius.toFloat() * 2 / minSize.toFloat()
-
-        val scaledBitmap = Bitmap.createScaledBitmap(
-            source,
-            (source.width * scale).toInt(),
-            (source.height * scale).toInt(),
-            true
-        )
-
-        val output = Bitmap.createBitmap(radius * 2, radius * 2, Bitmap.Config.ARGB_8888)
-
-        val canvas = Canvas(output)
-
-        val paint = Paint()
-        paint.isAntiAlias = true
-
-
-        val rect = RectF(0f, 0f, output.width.toFloat(), output.height.toFloat())
-        canvas.drawRoundRect(rect, radius.toFloat(), radius.toFloat(), paint)
-
-        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-
-        canvas.drawBitmap(
-            scaledBitmap,
-            (output.width - scaledBitmap.width) / 2.toFloat(),
-            (output.height - scaledBitmap.height) / 2.toFloat(),
-            paint
-        )
-
-        scaledBitmap.recycle()
-        if (source != output) {
-            source.recycle()
-        }
-
-        return output
     }
 }
