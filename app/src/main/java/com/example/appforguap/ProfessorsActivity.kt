@@ -1,7 +1,10 @@
 package com.example.appforguap
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.view.View
+import android.widget.ImageView
+import android.widget.SearchView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -9,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import android.view.*
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.TextView
 
 class ProfessorsActivity : AppCompatActivity() {
 
@@ -38,7 +43,14 @@ class ProfessorsActivity : AppCompatActivity() {
             filters = extractFilters()
 
             launch(Dispatchers.Main) {
-                adapter = ProfessorsAdapter(allProfessors)
+                adapter = ProfessorsAdapter(allProfessors) { professor ->
+                    val intent = Intent(this@ProfessorsActivity, ProfessorPageActivity::class.java).apply {
+                        putExtra("professor_name", professor.name)
+                        putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
+                        putExtra("professor_image_url", professor.imageUrl)
+                    }
+                    startActivity(intent)
+                }
                 recyclerView.adapter = adapter
             }
         }
@@ -47,6 +59,7 @@ class ProfessorsActivity : AppCompatActivity() {
         setupSearchView()
         setupFilterButton(filterButton)
     }
+
     // Настрока кнопки поиска
     fun setupSearchButton(searchButton: ImageView) {
         searchButton.setOnClickListener {
@@ -58,6 +71,7 @@ class ProfessorsActivity : AppCompatActivity() {
             }
         }
     }
+
     // Настройка окна ввода для поиска
     fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -121,9 +135,10 @@ class ProfessorsActivity : AppCompatActivity() {
     }
 }
 
-// Адаптер для RecyclerView
-class ProfessorsAdapter(var professors: List<Professor>) :
-    RecyclerView.Adapter<ProfessorsAdapter.ViewHolder>() {
+class ProfessorsAdapter(
+    var professors: List<Professor>,
+    private val itemClickListener: (Professor) -> Unit
+) : RecyclerView.Adapter<ProfessorsAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -141,6 +156,10 @@ class ProfessorsAdapter(var professors: List<Professor>) :
         holder.nameTextView.text = professor.name
         holder.positionsTextView.text = formattedPositions
         loadImageWithRotation(holder.imageView.context, professor.imageUrl, holder.imageView)
+
+        holder.itemView.setOnClickListener {
+            itemClickListener(professor)
+        }
     }
 
     override fun getItemCount(): Int {

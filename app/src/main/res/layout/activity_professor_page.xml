@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="32dp"
+            android:contentDescription="Professor Image"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_launcher_foreground" />
+
+        <TextView
+            android:id="@+id/nameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Professor Name"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+        <!-- Кнопка "Оставить отзыв" -->
+        <Button
+            android:id="@+id/buttonLeaveReview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Оставить отзыв"
+            android:layout_margin="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/nameTextView"
+            android:onClick="leaveReviewClick" />
+
+        <!-- Кнопка "Дисциплины" -->
+        <Button
+            android:id="@+id/buttonSubjects"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Дисциплины"
+            android:layout_margin="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonLeaveReview"
+            android:onClick="toggleSubjectsVisibility" />
+
+        <!-- Список дисциплин -->
+        <TextView
+            android:id="@+id/subjectsTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:text=""
+            android:visibility="gone"
+            android:textStyle="normal"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonSubjects" />
+
+        <!-- Кнопка "Отзывы" -->
+        <Button
+            android:id="@+id/buttonReviews"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Отзывы"
+            android:layout_margin="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/subjectsTextView"
+            android:onClick="toggleReviewsVisibility" />
+
+        <!-- Список отзывов -->
+        <TextView
+            android:id="@+id/reviewsTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text=""
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonReviews" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
