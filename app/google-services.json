@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "204127693540",
+    "firebase_url": "https://appforguap-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "appforguap",
+    "storage_bucket": "appforguap.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:204127693540:android:043374452332d366b05af1",
+        "android_client_info": {
+          "package_name": "com.example.appforguap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTMX-pfpYp8XMa_d8Q_80wT-o9d47SZCo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
