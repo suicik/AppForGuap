@@ -12,7 +12,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.example.appforguap.databinding.ActivityRegisterBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class RegisterActivity : AppCompatActivity() {
     private lateinit var binding :ActivityRegisterBinding
@@ -69,12 +72,27 @@ class RegisterActivity : AppCompatActivity() {
             */
             validateData()
         }
+        binding.buttonForSignIn.setOnClickListener{
+            /*
+            1. Ввод данных
+            2) Правильность введенного
+            3) Вход - Firebase Auth
+            4) Проверка типа пользователя
+             Если пользователь - то к просмотру преподов
+             Если админ - то к управлению
+             */
+            validateData()
+        }
 
 
     }
+
+
+
     private var email_ =""
     private var password_ =""
     private var group_ =""
+
     private fun validateData(){
         // Ввод данных
         email_ = binding.etEmail.text.toString().trim()
@@ -92,9 +110,27 @@ class RegisterActivity : AppCompatActivity() {
         } else if (group_.isEmpty()){
             Toast.makeText(this, "Введите группу, поле пусто", Toast.LENGTH_SHORT).show()
         } else {
-            createUserAcc()
+            if (binding.buttonForRegister.isEnabled) {
+                createUserAcc()
+            } else{
+                loginUser()
+            }
         }
     }
+
+    private fun loginUser() {
+        progressDialog.setMessage("Logging in...")
+        progressDialog.show()
+
+        firebaseAuth.signInWithEmailAndPassword(email_,password_)
+            .addOnSuccessListener {
+                checkUser()
+            }
+            .addOnFailureListener{e->
+                Toast.makeText(this, "Не удалось войти в аккаунт из за ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun createUserAcc(){
         // Cоздание аккаунта Firebase Auth
         progressDialog.setMessage("Создаем аккаунт...")
@@ -110,6 +146,31 @@ class RegisterActivity : AppCompatActivity() {
             }
     }
 
+    private fun checkUser(){
+        progressDialog.setMessage("Checking User...")
+
+        val firebaseUser = firebaseAuth.currentUser!!
+
+        val ref = FirebaseDatabase.getInstance().getReference("Users")
+        ref.child(firebaseUser.uid)
+            .addListenerForSingleValueEvent(object  : ValueEventListener{
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    progressDialog.dismiss()
+                    val userType = snapshot.child("userType").value
+                    if (userType == "user"){
+                        startActivity((Intent(this@RegisterActivity, ProfessorsActivity::class.java)))
+                        finish()
+                    }
+                    else if (userType == "admin") {
+                        startActivity((Intent(this@RegisterActivity, AdminActivity::class.java)))
+                        finish()
+                    }
+                }
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
+    }
     private fun updateUserInfo() {
         //Добавление в базу данных Firebase Database
         progressDialog.setMessage("Заносим в базу Ваш аккаунт")

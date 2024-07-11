@@ -1,5 +1,7 @@
 package com.example.appforguap
 
+import android.content.Intent
+import android.os.Binder
 import android.os.Bundle
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
@@ -10,9 +12,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import android.view.*
+import com.example.appforguap.databinding.ActivityProfessorsBinding
+import com.example.appforguap.databinding.ActivityRegisterBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class ProfessorsActivity : AppCompatActivity() {
-
+    private  lateinit var binding: ActivityProfessorsBinding
+    private lateinit var  firebaseAuth: FirebaseAuth
     private lateinit var recyclerView: RecyclerView
     lateinit var searchView: SearchView
     private lateinit var adapter: ProfessorsAdapter
@@ -25,7 +31,8 @@ class ProfessorsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_professors)
 
         enableEdgeToEdge()
-
+        firebaseAuth = FirebaseAuth.getInstance()
+        checkUser()
         recyclerView = findViewById(R.id.recyclerView)
         searchView = findViewById(R.id.searchView)
         val searchButton: ImageView = findViewById(R.id.searchButton)
@@ -47,6 +54,15 @@ class ProfessorsActivity : AppCompatActivity() {
         setupSearchView()
         setupFilterButton(filterButton)
     }
+
+    private fun checkUser() {
+        val firebaseUser = firebaseAuth.currentUser
+        if (firebaseUser == null){
+            startActivity(Intent(this, RegisterActivity::class.java))
+            finish()
+        }
+    }
+
     // Настрока кнопки поиска
     fun setupSearchButton(searchButton: ImageView) {
         searchButton.setOnClickListener {
