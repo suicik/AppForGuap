@@ -1,10 +1,9 @@
 package com.example.appforguap
 
 import android.content.Intent
+import android.os.Binder
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageView
-import android.widget.SearchView
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,12 +11,14 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.widget.TextView
+import android.view.*
+import com.example.appforguap.databinding.ActivityProfessorsBinding
+import com.example.appforguap.databinding.ActivityRegisterBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class ProfessorsActivity : AppCompatActivity() {
-
+    private  lateinit var binding: ActivityProfessorsBinding
+    private lateinit var  firebaseAuth: FirebaseAuth
     private lateinit var recyclerView: RecyclerView
     lateinit var searchView: SearchView
     private lateinit var adapter: ProfessorsAdapter
@@ -30,11 +31,13 @@ class ProfessorsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_professors)
 
         enableEdgeToEdge()
-
+        firebaseAuth = FirebaseAuth.getInstance()
+        checkUser()
         recyclerView = findViewById(R.id.recyclerView)
         searchView = findViewById(R.id.searchView)
         val searchButton: ImageView = findViewById(R.id.searchButton)
         val filterButton: ImageView = findViewById(R.id.filterButton)
+        val profileImage: ImageView = findViewById(R.id.imageView)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -44,8 +47,8 @@ class ProfessorsActivity : AppCompatActivity() {
 
             launch(Dispatchers.Main) {
                 adapter = ProfessorsAdapter(allProfessors) { professor ->
-                    val intent = Intent(this@ProfessorsActivity, ProfessorPageActivity::class.java).apply {
-                        putExtra("professor_name", professor.name)
+                    val intent = Intent(this@ProfessorsActivity,
+                        ProfessorPageActivity::class.java).apply { putExtra("professor_name", professor.name)
                         putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
                         putExtra("professor_image_url", professor.imageUrl)
                     }
@@ -58,6 +61,16 @@ class ProfessorsActivity : AppCompatActivity() {
         setupSearchButton(searchButton)
         setupSearchView()
         setupFilterButton(filterButton)
+        setupProfileImage(profileImage)
+
+    }
+
+    private fun checkUser() {
+        val firebaseUser = firebaseAuth.currentUser
+        if (firebaseUser == null){
+            startActivity(Intent(this, RegisterActivity::class.java))
+            finish()
+        }
     }
 
     // Настрока кнопки поиска
@@ -71,7 +84,6 @@ class ProfessorsActivity : AppCompatActivity() {
             }
         }
     }
-
     // Настройка окна ввода для поиска
     fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -133,8 +145,15 @@ class ProfessorsActivity : AppCompatActivity() {
             )
         }
     }
+
+    private fun setupProfileImage(profileImage: ImageView) {
+        profileImage.setOnClickListener {
+            startActivity(Intent(this, UserProfileActivity::class.java))
+        }
+    }
 }
 
+// Адаптер для RecyclerView
 class ProfessorsAdapter(
     var professors: List<Professor>,
     private val itemClickListener: (Professor) -> Unit
@@ -156,7 +175,6 @@ class ProfessorsAdapter(
         holder.nameTextView.text = professor.name
         holder.positionsTextView.text = formattedPositions
         loadImageWithRotation(holder.imageView.context, professor.imageUrl, holder.imageView)
-
         holder.itemView.setOnClickListener {
             itemClickListener(professor)
         }
