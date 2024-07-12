@@ -68,7 +68,7 @@ dependencies {
     implementation("org.jsoup:jsoup:1.14.2")
     implementation("androidx.recyclerview:recyclerview:1.2.1")
     implementation ("com.squareup.picasso:picasso:2.71828")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.auth)

@@ -14,12 +14,19 @@ data class Professor(
     val positions: List<Position> = emptyList(),
     val subjects: List<String> = emptyList()
 )
+{
+    constructor() : this("", "", "", emptyList(), emptyList())
+
+}
 // Информация для фильтров
 data class Position(
     val department: String,
     val title: String,
     val institute: String
 )
+{
+    constructor() : this("", "", "")
+}
 
 // Парсинг страниц
 suspend fun parseAllProfessors(): List<Professor> = coroutineScope {
