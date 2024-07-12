@@ -1,7 +1,6 @@
 package com.example.appforguap
 
 import android.app.ProgressDialog
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -11,8 +10,13 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.appforguap.databinding.ActivityAdminBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.select.Elements
+import java.io.IOException
+import kotlin.concurrent.thread
 
 class AdminActivity : AppCompatActivity() {
     private lateinit var  binding: ActivityAdminBinding
@@ -35,6 +39,11 @@ class AdminActivity : AppCompatActivity() {
 
         binding.addFiltersToBd.setOnClickListener{
             parseFilters()
+        }
+        binding.addPrepods.setOnClickListener{
+            Thread{
+                parseAllProfessors()
+            }.start()
         }
     }
 
@@ -77,4 +86,102 @@ class AdminActivity : AppCompatActivity() {
                 }
         }
     }
+
+    // Информация для фильтров
+    data class Position(
+        val department: String,
+        val title: String,
+        val institute: String
+    )
+
+    // Парсинг страниц
+    private fun parseAllProfessors() {
+        val baseUrl = "https://pro.guap.ru/professors?page="
+        var page = 1
+        var isMorePages = true
+
+        while (isMorePages) {
+            val url = "$baseUrl$page"
+            println("Parsing page: $page")
+
+            try {
+                val doc: Document = Jsoup.connect(url).get()
+                val professorElements: Elements = doc.select("div.card.shadow-sm.my-sm-2")
+
+                val jobs = professorElements.map { element ->
+                    val timestamp = System.currentTimeMillis()
+                    val hashMap = HashMap<String, Any>()
+                    hashMap["id"] = "$timestamp"
+
+                    val nameElement = element.selectFirst("h5 a")
+                    hashMap["name"] = nameElement?.text()?.trim() ?: "Unknown"
+
+                    val profileUrl = nameElement?.attr("href")?.let { "https://pro.guap.ru$it" } ?: "Unknown"
+                    hashMap["profileUrl"] = profileUrl
+
+                    val imageElement = element.selectFirst("img.profile_image")
+                    hashMap["imageUrl"] = imageElement?.attr("src")?.let { "https://pro.guap.ru$it" } ?: "Unknown"
+
+                    val positions =parseProfessorPage(profileUrl)
+                    hashMap["positions"] = positions.first
+                    hashMap["subjects"] = positions.second
+                    hashMap["timestamp"] = timestamp
+                    hashMap["uid"] = "${firebaseAuth.uid}"
+                    val ref = FirebaseDatabase.getInstance().getReference("Proffesors")
+                    ref.child("$timestamp")
+                        .setValue(hashMap)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Успешный вход", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener {e->
+                            Toast.makeText(this, "Не удалось сохранить ваш аккаунт из за ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+
+                if (jobs.isEmpty()) {
+                    isMorePages = false
+                } else {
+                    page++
+                }
+            } catch (e: IOException) {
+                println("Error parsing page $url: ${e.message}")
+            }
+        }
+
+    }
+    // Парсинг каждого преподавателя
+    private fun parseProfessorPage(url: String): Pair<List<Position>, List<String>> {
+        return try {
+            val doc: Document = Jsoup.connect(url).get()
+
+            // Selecting position elements
+            val positionElements: Elements =
+                doc.select("div.card.shadow-sm div.card-body div.list-group-item")
+            val positions = mutableListOf<Position>()
+
+            // Parsing position elements
+            for (element in positionElements) {
+                val department =
+                    element.selectFirst("div.small.text-end.text-muted.mb-1")?.text()?.trim() ?: ""
+                val title = element.selectFirst("h5.fw-semibold.my-1")?.text()?.trim() ?: ""
+                val institute =
+                    element.selectFirst("div.small:not(.text-end)")?.text()?.trim() ?: ""
+
+                if (department.isNotEmpty() && title.isNotEmpty() && institute.isNotEmpty()) {
+                    val newPosition = Position(department, title, institute)
+                    positions.add(newPosition)
+                }
+            }
+
+            // Selecting subject elements
+            val subjectElements: Elements = doc.select("div#subjects div.list-group-item")
+            val subjects = subjectElements.map { it.text().trim() }
+
+            Pair(positions.toList(), subjects)
+        } catch (e: IOException) {
+            println("Ошибка при парсинге страницы преподавателя $url: ${e.message}")
+            Pair(emptyList(), emptyList())
+        }
+    }
+
 }
