@@ -22,6 +22,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private  lateinit var progressDialog: ProgressDialog
     override fun onCreate(savedInstanceState: Bundle?) {
+        //startActivity(Intent(this, ProfessorsActivity::class.java))
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_register)
@@ -97,7 +98,7 @@ class RegisterActivity : AppCompatActivity() {
         // Ввод данных
         email_ = binding.etEmail.text.toString().trim()
         password_ = binding.etPassword.text.toString().trim()
-        group_ = binding.etEmail.text.toString().trim()
+        group_ = binding.etGroup.text.toString().trim()
 
         //Валидность !!Потом добавить проверку по номеру группы
         if (email_.isEmpty()) {

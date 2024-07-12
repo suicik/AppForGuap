@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Email:"
+        android:textSize="18sp"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/tvGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Группа:"
+        android:textSize="18sp"
+        android:layout_below="@id/tvEmail"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/tvUserType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Права:"
+        android:textSize="18sp"
+        android:layout_below="@id/tvGroup"
+        android:layout_marginTop="20dp"/>
+
+    <Button
+        android:id="@+id/btnLogout"
+        android:layout_width="147dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/buttonshape"
+        android:text="Выход"
+        android:textColor="@color/white"
+        android:layout_below="@id/tvUserType" />
+</RelativeLayout>

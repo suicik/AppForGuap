@@ -37,6 +37,7 @@ class ProfessorsActivity : AppCompatActivity() {
         searchView = findViewById(R.id.searchView)
         val searchButton: ImageView = findViewById(R.id.searchButton)
         val filterButton: ImageView = findViewById(R.id.filterButton)
+        val profileImage: ImageView = findViewById(R.id.imageView)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -45,7 +46,14 @@ class ProfessorsActivity : AppCompatActivity() {
             filters = extractFilters()
 
             launch(Dispatchers.Main) {
-                adapter = ProfessorsAdapter(allProfessors)
+                adapter = ProfessorsAdapter(allProfessors) { professor ->
+                    val intent = Intent(this@ProfessorsActivity,
+                        ProfessorPageActivity::class.java).apply { putExtra("professor_name", professor.name)
+                        putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
+                        putExtra("professor_image_url", professor.imageUrl)
+                    }
+                    startActivity(intent)
+                }
                 recyclerView.adapter = adapter
             }
         }
@@ -53,6 +61,8 @@ class ProfessorsActivity : AppCompatActivity() {
         setupSearchButton(searchButton)
         setupSearchView()
         setupFilterButton(filterButton)
+        setupProfileImage(profileImage)
+
     }
 
     private fun checkUser() {
@@ -135,11 +145,19 @@ class ProfessorsActivity : AppCompatActivity() {
             )
         }
     }
+
+    private fun setupProfileImage(profileImage: ImageView) {
+        profileImage.setOnClickListener {
+            startActivity(Intent(this, UserProfileActivity::class.java))
+        }
+    }
 }
 
 // Адаптер для RecyclerView
-class ProfessorsAdapter(var professors: List<Professor>) :
-    RecyclerView.Adapter<ProfessorsAdapter.ViewHolder>() {
+class ProfessorsAdapter(
+    var professors: List<Professor>,
+    private val itemClickListener: (Professor) -> Unit
+) : RecyclerView.Adapter<ProfessorsAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -157,6 +175,9 @@ class ProfessorsAdapter(var professors: List<Professor>) :
         holder.nameTextView.text = professor.name
         holder.positionsTextView.text = formattedPositions
         loadImageWithRotation(holder.imageView.context, professor.imageUrl, holder.imageView)
+        holder.itemView.setOnClickListener {
+            itemClickListener(professor)
+        }
     }
 
     override fun getItemCount(): Int {

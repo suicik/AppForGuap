@@ -11,7 +11,8 @@ data class Professor(
     val name: String,
     val profileUrl: String,
     val imageUrl: String,
-    val positions: List<Position> = emptyList()
+    val positions: List<Position> = emptyList(),
+    val subjects: List<String> = emptyList()
 )
 // Информация для фильтров
 data class Position(
@@ -44,9 +45,9 @@ suspend fun parseAllProfessors(): List<Professor> = coroutineScope {
                     val imageElement = element.selectFirst("img.profile_image")
                     val imageUrl = imageElement?.attr("src")?.let { "https://pro.guap.ru$it" } ?: "Unknown"
 
-                    val positions = if (profileUrl != "Unknown") parseProfessorPage(profileUrl) else emptyList()
+                    val (positions, subjects) = if (profileUrl != "Unknown") parseProfessorPage(profileUrl) else Pair(emptyList(), emptyList())
 
-                    Professor(name, profileUrl, imageUrl, positions)
+                    Professor(name, profileUrl, imageUrl, positions, subjects)
                 }
             }
 
@@ -67,31 +68,33 @@ suspend fun parseAllProfessors(): List<Professor> = coroutineScope {
     allProfessors
 }
 // Парсинг каждого преподавателя
-suspend fun parseProfessorPage(url: String): List<Position> = withContext(Dispatchers.IO) {
+suspend fun parseProfessorPage(url: String): Pair<List<Position>, List<String>> = withContext(Dispatchers.IO) {
     try {
         val doc: Document = Jsoup.connect(url).get()
+
+        // Selecting position elements
         val positionElements: Elements = doc.select("div.card.shadow-sm div.card-body div.list-group-item")
+        val positions = mutableListOf<Position>()
 
-        val positions = mutableSetOf<Position>()
-
+        // Parsing position elements
         for (element in positionElements) {
-            val department = element.selectFirst("div.small.text-end.text-muted.mb-1")?.text()?.trim()
-            val title = element.selectFirst("h5.fw-semibold.my-1")?.text()?.trim()
-            val institute = element.selectFirst("div.small:not(.text-end)")?.text()?.trim()
+            val department = element.selectFirst("div.small.text-end.text-muted.mb-1")?.text()?.trim() ?: ""
+            val title = element.selectFirst("h5.fw-semibold.my-1")?.text()?.trim() ?: ""
+            val institute = element.selectFirst("div.small:not(.text-end)")?.text()?.trim() ?: ""
 
-            department?.let { dep ->
-                title?.let { t ->
-                    institute?.let { inst ->
-                        val newPosition = Position(dep, t, inst)
-                        positions.add(newPosition)
-                    }
-                }
+            if (department.isNotEmpty() && title.isNotEmpty() && institute.isNotEmpty()) {
+                val newPosition = Position(department, title, institute)
+                positions.add(newPosition)
             }
         }
 
-        positions.toList()
+        // Selecting subject elements
+        val subjectElements: Elements = doc.select("div#subjects div.list-group-item")
+        val subjects = subjectElements.map { it.text().trim() }
+
+        Pair(positions, subjects)
     } catch (e: IOException) {
         println("Ошибка при парсинге страницы преподавателя $url: ${e.message}")
-        emptyList()
+        Pair(emptyList(), emptyList())
     }
 }
