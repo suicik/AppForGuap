@@ -1,24 +1,29 @@
 package com.example.appforguap
 
 import android.content.Intent
-import android.os.Binder
 import android.os.Bundle
 import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import android.view.*
 import com.example.appforguap.databinding.ActivityProfessorsBinding
-import com.example.appforguap.databinding.ActivityRegisterBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import android.util.Log
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+
+
+
+
 
 class ProfessorsActivity : AppCompatActivity() {
     private  lateinit var binding: ActivityProfessorsBinding
     private lateinit var  firebaseAuth: FirebaseAuth
+    private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var recyclerView: RecyclerView
     lateinit var searchView: SearchView
     private lateinit var adapter: ProfessorsAdapter
@@ -32,6 +37,7 @@ class ProfessorsActivity : AppCompatActivity() {
 
         enableEdgeToEdge()
         firebaseAuth = FirebaseAuth.getInstance()
+        firebaseDatabase = FirebaseDatabase.getInstance()
         checkUser()
         recyclerView = findViewById(R.id.recyclerView)
         searchView = findViewById(R.id.searchView)
@@ -41,22 +47,8 @@ class ProfessorsActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        GlobalScope.launch(Dispatchers.IO) {
-            allProfessors = parseAllProfessors()
-            filters = extractFilters()
-
-            launch(Dispatchers.Main) {
-                adapter = ProfessorsAdapter(allProfessors) { professor ->
-                    val intent = Intent(this@ProfessorsActivity,
-                        ProfessorPageActivity::class.java).apply { putExtra("professor_name", professor.name)
-                        putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
-                        putExtra("professor_image_url", professor.imageUrl)
-                    }
-                    startActivity(intent)
-                }
-                recyclerView.adapter = adapter
-            }
-        }
+        fetchFilters()
+        fetchProfessors()
 
         setupSearchButton(searchButton)
         setupSearchView()
@@ -70,6 +62,90 @@ class ProfessorsActivity : AppCompatActivity() {
         if (firebaseUser == null){
             startActivity(Intent(this, RegisterActivity::class.java))
             finish()
+        }
+    }
+
+    private fun fetchFilters() {
+        fetchFiltersFromFirebase(
+            onSuccess = { fetchedFilters ->
+                filters = fetchedFilters
+                Log.d("Firebase", "Filters fetched successfully: $filters")
+            },
+            onFailure = { exception ->
+                Log.e("Firebase", "Error fetching filters", exception)
+                Toast.makeText(this, "Error fetching filters: ${exception.message}", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+
+    fun fetchFiltersFromFirebase(onSuccess: (Filters) -> Unit, onFailure: (Exception) -> Unit) {
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val filtersRef = firebaseDatabase.reference
+
+        filtersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                val positions = dataSnapshot.child("position").children.mapNotNull {
+                    val text = it.child("text").getValue(String::class.java)
+                    val value = it.child("value").getValue(String::class.java)
+                    if (text != null && value != null) {
+                        FilterOption(value, text)
+                    } else {
+                        null
+                    }
+                }
+
+                val faculties = dataSnapshot.child("facultyWithChairs").children.mapNotNull {
+                    val text = it.child("text").getValue(String::class.java)
+                    val value = it.child("value").getValue(String::class.java)
+                    if (text != null && value != null) {
+                        FilterOption(value, text)
+                    } else {
+                        null
+                    }
+                }
+
+                val subunits = dataSnapshot.child("subunit").children.mapNotNull {
+                    val text = it.child("text").getValue(String::class.java)
+                    val value = it.child("value").getValue(String::class.java)
+                    if (text != null && value != null) {
+                        FilterOption(value, text)
+                    } else {
+                        null
+                    }
+                }
+
+                val filters = Filters(positions, faculties, subunits)
+                onSuccess(filters)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                onFailure(databaseError.toException())
+            }
+        })
+    }
+
+
+
+
+
+    private fun fetchProfessors() {
+        firebaseDatabase.getReference("Proffesors").get().addOnSuccessListener { dataSnapshot ->
+            allProfessors = dataSnapshot.children.mapNotNull { it.getValue(Professor::class.java) }
+            adapter = ProfessorsAdapter(allProfessors) { professor ->
+                val intent = Intent(this@ProfessorsActivity, ProfessorPageActivity::class.java).apply {
+                    putExtra("professor_name", professor.name)
+                    putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
+                    putExtra("professor_image_url", professor.imageUrl)
+                }
+                startActivity(intent)
+            }
+            recyclerView.adapter = adapter
+        }.addOnFailureListener { e ->
+            Log.e("fetchProfessors", "Error fetching professors", e)
+            // Handle error (e.g., show toast, retry mechanism, etc.)
         }
     }
 
