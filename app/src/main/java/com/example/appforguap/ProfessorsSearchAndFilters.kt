@@ -137,7 +137,7 @@ object ProfessorsHelper {
         val searchText = (activity as ProfessorsActivity).searchView.query.toString().trim()
         val filteredList = allProfessors.filter { professor ->
             val matchesPosition = positionFilter?.let { filterOption ->
-                professor.positions.any { pos -> pos.title == filterOption.text || filterOption.value.toInt() == 0 }
+                professor.positions.any { pos -> pos.title in filterOption.text || filterOption.value.toInt() == 0 }
             } ?: true
 
             val matchesFaculty = facultyFilter?.let { filterOption ->

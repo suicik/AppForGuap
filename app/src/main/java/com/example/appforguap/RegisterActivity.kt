@@ -22,7 +22,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private  lateinit var progressDialog: ProgressDialog
     override fun onCreate(savedInstanceState: Bundle?) {
-        //startActivity(Intent(this, ProfessorsActivity::class.java))
+        startActivity(Intent(this, ProfessorsActivity::class.java))
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_register)
@@ -129,6 +129,7 @@ class RegisterActivity : AppCompatActivity() {
             }
             .addOnFailureListener{e->
                 Toast.makeText(this, "Не удалось войти в аккаунт из за ${e.message}", Toast.LENGTH_SHORT).show()
+                progressDialog.dismiss()
             }
     }
 

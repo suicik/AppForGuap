@@ -6,27 +6,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import java.io.IOException
 
-// Информация о преподавателе
-data class Professor(
-    val name: String,
-    val profileUrl: String,
-    val imageUrl: String,
-    val positions: List<Position> = emptyList(),
-    val subjects: List<String> = emptyList()
-)
-{
-    constructor() : this("", "", "", emptyList(), emptyList())
-
-}
-// Информация для фильтров
-data class Position(
-    val department: String,
-    val title: String,
-    val institute: String
-)
-{
-    constructor() : this("", "", "")
-}
+/*
 
 // Парсинг страниц
 suspend fun parseAllProfessors(): List<Professor> = coroutineScope {
@@ -105,3 +85,4 @@ suspend fun parseProfessorPage(url: String): Pair<List<Position>, List<String>> 
         Pair(emptyList(), emptyList())
     }
 }
+*/
