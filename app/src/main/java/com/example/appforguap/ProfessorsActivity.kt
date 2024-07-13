@@ -16,13 +16,30 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 
+data class Professor(
+    val id: String,
+    val name: String,
+    val profileUrl: String,
+    val imageUrl: String,
+    val positions: List<Position> = emptyList(),
+    val subjects: List<String> = emptyList()
+)
+{
+    constructor() : this("", "", "", "", emptyList(), emptyList())
 
-
-
-
+}
+// Информация для фильтров
+data class Position(
+    val department: String,
+    val title: String,
+    val institute: String
+)
+{
+    constructor() : this("", "", "")
+}
 class ProfessorsActivity : AppCompatActivity() {
-    private  lateinit var binding: ActivityProfessorsBinding
-    private lateinit var  firebaseAuth: FirebaseAuth
+    private lateinit var binding: ActivityProfessorsBinding
+    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var recyclerView: RecyclerView
     lateinit var searchView: SearchView
@@ -33,19 +50,32 @@ class ProfessorsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_professors)
+        binding = ActivityProfessorsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         enableEdgeToEdge()
         firebaseAuth = FirebaseAuth.getInstance()
         firebaseDatabase = FirebaseDatabase.getInstance()
         checkUser()
-        recyclerView = findViewById(R.id.recyclerView)
-        searchView = findViewById(R.id.searchView)
-        val searchButton: ImageView = findViewById(R.id.searchButton)
-        val filterButton: ImageView = findViewById(R.id.filterButton)
-        val profileImage: ImageView = findViewById(R.id.imageView)
+
+        recyclerView = binding.recyclerView
+        searchView = binding.searchView
+        val searchButton: ImageView = binding.searchButton
+        val filterButton: ImageView = binding.filterButton
+        val profileImage: ImageView = binding.imageView
 
         recyclerView.layoutManager = LinearLayoutManager(this)
+
+        adapter = ProfessorsAdapter(listOf()) { professor ->
+            val intent = Intent(this@ProfessorsActivity, ProfessorPageActivity::class.java).apply {
+                putExtra("professor_id", professor.id)
+                putExtra("professor_name", professor.name)
+                putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
+                putExtra("professor_image_url", professor.imageUrl)
+            }
+            startActivity(intent)
+        }
+        recyclerView.adapter = adapter
 
         fetchFilters()
         fetchProfessors()
@@ -54,12 +84,11 @@ class ProfessorsActivity : AppCompatActivity() {
         setupSearchView()
         setupFilterButton(filterButton)
         setupProfileImage(profileImage)
-
     }
 
     private fun checkUser() {
         val firebaseUser = firebaseAuth.currentUser
-        if (firebaseUser == null){
+        if (firebaseUser == null) {
             startActivity(Intent(this, RegisterActivity::class.java))
             finish()
         }
@@ -78,15 +107,11 @@ class ProfessorsActivity : AppCompatActivity() {
         )
     }
 
-
     fun fetchFiltersFromFirebase(onSuccess: (Filters) -> Unit, onFailure: (Exception) -> Unit) {
-        val firebaseDatabase = FirebaseDatabase.getInstance()
         val filtersRef = firebaseDatabase.reference
 
         filtersRef.addListenerForSingleValueEvent(object : ValueEventListener {
-
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-
                 val positions = dataSnapshot.child("position").children.mapNotNull {
                     val text = it.child("text").getValue(String::class.java)
                     val value = it.child("value").getValue(String::class.java)
@@ -127,30 +152,17 @@ class ProfessorsActivity : AppCompatActivity() {
         })
     }
 
-
-
-
-
     private fun fetchProfessors() {
         firebaseDatabase.getReference("Proffesors").get().addOnSuccessListener { dataSnapshot ->
             allProfessors = dataSnapshot.children.mapNotNull { it.getValue(Professor::class.java) }
-            adapter = ProfessorsAdapter(allProfessors) { professor ->
-                val intent = Intent(this@ProfessorsActivity, ProfessorPageActivity::class.java).apply {
-                    putExtra("professor_name", professor.name)
-                    putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
-                    putExtra("professor_image_url", professor.imageUrl)
-                }
-                startActivity(intent)
-            }
-            recyclerView.adapter = adapter
+            adapter.updateList(allProfessors)
         }.addOnFailureListener { e ->
             Log.e("fetchProfessors", "Error fetching professors", e)
             // Handle error (e.g., show toast, retry mechanism, etc.)
         }
     }
 
-    // Настрока кнопки поиска
-    fun setupSearchButton(searchButton: ImageView) {
+    private fun setupSearchButton(searchButton: ImageView) {
         searchButton.setOnClickListener {
             if (searchView.visibility == View.GONE) {
                 searchView.visibility = View.VISIBLE
@@ -160,8 +172,8 @@ class ProfessorsActivity : AppCompatActivity() {
             }
         }
     }
-    // Настройка окна ввода для поиска
-    fun setupSearchView() {
+
+    private fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
@@ -196,15 +208,13 @@ class ProfessorsActivity : AppCompatActivity() {
         })
     }
 
-    // Настройка кнопки для открытия окна фильтрации
-    fun setupFilterButton(filterButton: ImageView) {
+    private fun setupFilterButton(filterButton: ImageView) {
         filterButton.setOnClickListener {
             showFilterDialog()
         }
     }
 
-    // Показ окна фильтрации
-    fun showFilterDialog() {
+    private fun showFilterDialog() {
         filters?.let {
             ProfessorsHelper.setupFilterDialog(
                 this,
