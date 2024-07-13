@@ -11,18 +11,22 @@ data class Review(
     val id: String = "",
     val professorId: String = "",
     val timestamp: String = "",
+    val subject: String = "",
     val review: String = "",
     val uid: String = ""
-)
+) {
+
+}
 
 class ReviewsAdapter(private val reviews: List<Review>) : RecyclerView.Adapter<ReviewsAdapter.ReviewViewHolder>() {
 
     class ReviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val reviewTextView: TextView = itemView.findViewById(R.id.reviewTextView)
         private val reviewNumberTextView: TextView = itemView.findViewById(R.id.reviewNumberTextView)
-
+        private val reviewSubjectTextView: TextView = itemView.findViewById(R.id.reviewSubjectTextView)
         fun bind(position: Int, review: Review) {
             reviewTextView.text = review.review
+            reviewSubjectTextView.text = review.subject
             reviewNumberTextView.text = "Отзыв №${position + 1}"
         }
     }

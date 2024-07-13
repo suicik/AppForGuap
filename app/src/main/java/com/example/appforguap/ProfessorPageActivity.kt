@@ -57,7 +57,6 @@ class ProfessorPageActivity : AppCompatActivity() {
     private fun loadReviews() {
         val id = intent.getStringExtra("professor_id") ?: ""
         val ref = FirebaseDatabase.getInstance().getReference("Books").child(id).child("Reviews")
-
         ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 reviewsList.clear()
@@ -73,8 +72,30 @@ class ProfessorPageActivity : AppCompatActivity() {
             }
         })
     }
+    fun getUserReview(userUid: String, callback: (Review?) -> Unit) {
+        val id = intent.getStringExtra("professor_id") ?: ""
+        val reviewsRef = FirebaseDatabase.getInstance().getReference("Books").child(id).child("Reviews")
+        reviewsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var userReview: Review? = null
+                for (reviewSnapshot in snapshot.children) {
+                    val review = reviewSnapshot.getValue(Review::class.java)
+                    if (review?.uid == userUid) {
+                        userReview = review
+                        break
+                    }
+                }
+                callback(userReview)
+            }
 
+            override fun onCancelled(error: DatabaseError) {
+                callback(null)
+            }
+        })
+    }
     private fun addReviewDialog() {
+        val id = intent.getStringExtra("professor_id") ?: ""
+        val ref = FirebaseDatabase.getInstance().getReference("Books").child(id).child("Reviews")
         val reviewAddBinding = DialogAddCommentBinding.inflate(LayoutInflater.from(this))
         val builder = AlertDialog.Builder(this, R.style.CustomDialog)
         builder.setView(reviewAddBinding.root)
@@ -85,19 +106,34 @@ class ProfessorPageActivity : AppCompatActivity() {
 
         val subjects = intent.getStringArrayListExtra("professor_subjects") ?: ArrayList()
         setupSpinner(this, reviewAddBinding.spinner, subjects)
-
         reviewAddBinding.button2.setOnClickListener {
-            review = reviewAddBinding.commentEditText.text.toString().trim()
-            if (review.isEmpty()) {
-                Toast.makeText(this, "Введите текст", Toast.LENGTH_SHORT).show()
-            } else {
-                alertDialog.dismiss()
-                addReviewToFirebase()
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            currentUser?.let { user ->
+                val selectedSubject = reviewAddBinding.spinner.selectedItem.toString()
+                getUserReview(user.uid) { userReview ->
+                    if (userReview == null || userReview.subject != selectedSubject) {
+                        // Текущий пользователь не оставлял отзыв или отзыв с другим предметом, можно продолжить
+                        val review = reviewAddBinding.commentEditText.text.toString().trim()
+
+                        if (review.isEmpty()) {
+                            Toast.makeText(this, "Ошибка", Toast.LENGTH_SHORT).show()
+                        } else {
+                            alertDialog.dismiss()
+                            addReviewToFirebase(review, selectedSubject)
+                        }
+                    } else {
+                        // Текущий пользователь уже оставлял отзыв для данного предмета, уведомляем об этом
+                        Toast.makeText(this, "Вы уже оставляли отзыв для этого предмета", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } ?: run {
+                // Если пользователь не авторизован, можно показать сообщение или выполнить другую логику
+                Toast.makeText(this, "Пожалуйста, авторизуйтесь", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun addReviewToFirebase() {
+    private fun addReviewToFirebase(review: String, selectedSubject: String) {
         progressDialog.setMessage("Добавляем отзыв")
         progressDialog.show()
 
@@ -106,6 +142,7 @@ class ProfessorPageActivity : AppCompatActivity() {
         val hashMap = HashMap<String, Any>().apply {
             put("id", timestamp)
             put("professorId", id)
+            put("subject", selectedSubject)
             put("timestamp", timestamp)
             put("review", review)
             put("uid", "${firebaseAuth.uid}")
