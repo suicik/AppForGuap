@@ -129,6 +129,7 @@ class RegisterActivity : AppCompatActivity() {
             }
             .addOnFailureListener{e->
                 Toast.makeText(this, "Не удалось войти в аккаунт из за ${e.message}", Toast.LENGTH_SHORT).show()
+                progressDialog.dismiss()
             }
     }
 

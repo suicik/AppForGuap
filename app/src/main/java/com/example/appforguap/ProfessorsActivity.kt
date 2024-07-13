@@ -16,10 +16,27 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 
+data class Professor(
+    val id: String,
+    val name: String,
+    val profileUrl: String,
+    val imageUrl: String,
+    val positions: List<Position> = emptyList(),
+    val subjects: List<String> = emptyList()
+)
+{
+    constructor() : this("", "", "", "", emptyList(), emptyList())
 
-
-
-
+}
+// Информация для фильтров
+data class Position(
+    val department: String,
+    val title: String,
+    val institute: String
+)
+{
+    constructor() : this("", "", "")
+}
 class ProfessorsActivity : AppCompatActivity() {
     private  lateinit var binding: ActivityProfessorsBinding
     private lateinit var  firebaseAuth: FirebaseAuth
@@ -136,6 +153,7 @@ class ProfessorsActivity : AppCompatActivity() {
             allProfessors = dataSnapshot.children.mapNotNull { it.getValue(Professor::class.java) }
             adapter = ProfessorsAdapter(allProfessors) { professor ->
                 val intent = Intent(this@ProfessorsActivity, ProfessorPageActivity::class.java).apply {
+                    putExtra("professor_id",professor.id)
                     putExtra("professor_name", professor.name)
                     putStringArrayListExtra("professor_subjects", ArrayList(professor.subjects))
                     putExtra("professor_image_url", professor.imageUrl)
