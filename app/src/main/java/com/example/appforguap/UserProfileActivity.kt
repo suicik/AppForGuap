@@ -47,7 +47,7 @@ class UserProfileActivity : AppCompatActivity() {
 
         btnLogout.setOnClickListener {
             firebaseAuth.signOut()
-            Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Выход прошёл успешно", Toast.LENGTH_SHORT).show()
 
             // Start RegisterActivity with a flag indicating logout
             val intent = Intent(this, RegisterActivity::class.java).apply {
@@ -116,20 +116,16 @@ class UserProfileActivity : AppCompatActivity() {
 
                     if (reviewsMap.isEmpty()) {
                         val noReviewsTextView = TextView(this@UserProfileActivity)
-                        noReviewsTextView.text = "No reviews found."
+                        noReviewsTextView.text = "Отзывы не найдены"
                         reviewsLayout.addView(noReviewsTextView)
                     } else {
                         loadProfessorNames(professorIds, reviewsMap)
                     }
-                } else {
-                    val noBooksTextView = TextView(this@UserProfileActivity)
-                    noBooksTextView.text = "No books found."
-                    reviewsLayout.addView(noBooksTextView)
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@UserProfileActivity, "Failed to load reviews", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@UserProfileActivity, "Ошибка при загрузке отзывов", Toast.LENGTH_SHORT).show()
             }
         })
     }

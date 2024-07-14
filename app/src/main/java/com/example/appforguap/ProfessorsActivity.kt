@@ -98,11 +98,11 @@ class ProfessorsActivity : AppCompatActivity() {
         fetchFiltersFromFirebase(
             onSuccess = { fetchedFilters ->
                 filters = fetchedFilters
-                Log.d("Firebase", "Filters fetched successfully: $filters")
+                Log.d("Firebase", "Фильтры успешно получены: $filters")
             },
             onFailure = { exception ->
-                Log.e("Firebase", "Error fetching filters", exception)
-                Toast.makeText(this, "Error fetching filters: ${exception.message}", Toast.LENGTH_LONG).show()
+                Log.e("Firebase", "Ошибка при получении списка фильтров", exception)
+                Toast.makeText(this, "Ошибка при получении списка фильтров: ${exception.message}", Toast.LENGTH_LONG).show()
             }
         )
     }
@@ -120,7 +120,7 @@ class ProfessorsActivity : AppCompatActivity() {
                     } else {
                         null
                     }
-                }
+                }.sortedWith(compareBy { it.text.toNaturalSort() }).toMutableList()
 
                 val faculties = dataSnapshot.child("facultyWithChairs").children.mapNotNull {
                     val text = it.child("text").getValue(String::class.java)
@@ -130,7 +130,7 @@ class ProfessorsActivity : AppCompatActivity() {
                     } else {
                         null
                     }
-                }
+                }.sortedWith(compareBy { it.text.toNaturalSort() }).toMutableList()
 
                 val subunits = dataSnapshot.child("subunit").children.mapNotNull {
                     val text = it.child("text").getValue(String::class.java)
@@ -140,7 +140,11 @@ class ProfessorsActivity : AppCompatActivity() {
                     } else {
                         null
                     }
-                }
+                }.sortedWith(compareBy { it.text.toNaturalSort() }).toMutableList()
+
+                positions.add(0, FilterOption("0", "Не выбрано")) // Assuming "0" is a default value for "Не выбрано"
+                faculties.add(0, FilterOption("0", "Все"))
+                subunits.add(0, FilterOption("0", "Все"))
 
                 val filters = Filters(positions, faculties, subunits)
                 onSuccess(filters)
@@ -152,12 +156,18 @@ class ProfessorsActivity : AppCompatActivity() {
         })
     }
 
+    fun String.toNaturalSort(): String {
+        return this.replace(Regex("(\\d+)")) { match ->
+            match.value.padStart(10, '0')
+        }
+    }
+
     private fun fetchProfessors() {
         firebaseDatabase.getReference("Proffesors").get().addOnSuccessListener { dataSnapshot ->
             allProfessors = dataSnapshot.children.mapNotNull { it.getValue(Professor::class.java) }
             adapter.updateList(allProfessors)
         }.addOnFailureListener { e ->
-            Log.e("fetchProfessors", "Error fetching professors", e)
+            Log.e("fetchProfessors", "Ошибка при получении списка преподавателей", e)
             // Handle error (e.g., show toast, retry mechanism, etc.)
         }
     }
@@ -206,6 +216,10 @@ class ProfessorsActivity : AppCompatActivity() {
                 return true
             }
         })
+        searchView.setOnCloseListener {
+            searchView.visibility = View.GONE // Hide the search view when closed
+            true
+        }
     }
 
     private fun setupFilterButton(filterButton: ImageView) {

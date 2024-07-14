@@ -219,6 +219,6 @@ class RegisterActivity : AppCompatActivity() {
         binding.etEmail.text.clear()
         binding.etPassword.text.clear()
         binding.etGroup.text.clear()
-        binding.rememberEnter.isChecked = false // Uncheck the remember me checkbox
+        binding.rememberEnter.isChecked = false
     }
 }
