@@ -106,32 +106,34 @@ class ProfessorPageActivity : AppCompatActivity() {
 
         val subjects = intent.getStringArrayListExtra("professor_subjects") ?: ArrayList()
         setupSpinner(this, reviewAddBinding.spinner, subjects)
+
         reviewAddBinding.button2.setOnClickListener {
             val currentUser = FirebaseAuth.getInstance().currentUser
             currentUser?.let { user ->
                 val selectedSubject = reviewAddBinding.spinner.selectedItem.toString()
-                getUserReview(user.uid) { userReview ->
-                    if (userReview == null || userReview.subject != selectedSubject) {
-                        // Текущий пользователь не оставлял отзыв или отзыв с другим предметом, можно продолжить
+                checkExistingReview(user.uid, selectedSubject) { hasReview ->
+                    if (!hasReview) {
+                        // No existing review for the selected subject
                         val review = reviewAddBinding.commentEditText.text.toString().trim()
 
                         if (review.isEmpty()) {
-                            Toast.makeText(this, "Ошибка", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Ошибка: Отзыв не может быть пустым", Toast.LENGTH_SHORT).show()
                         } else {
                             alertDialog.dismiss()
                             addReviewToFirebase(review, selectedSubject)
                         }
                     } else {
-                        // Текущий пользователь уже оставлял отзыв для данного предмета, уведомляем об этом
+                        // User has already left a review for this subject
                         Toast.makeText(this, "Вы уже оставляли отзыв для этого предмета", Toast.LENGTH_SHORT).show()
                     }
                 }
             } ?: run {
-                // Если пользователь не авторизован, можно показать сообщение или выполнить другую логику
+                // If the user is not authenticated
                 Toast.makeText(this, "Пожалуйста, авторизуйтесь", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
 
     private fun addReviewToFirebase(review: String, selectedSubject: String) {
         progressDialog.setMessage("Добавляем отзыв")
@@ -160,4 +162,28 @@ class ProfessorPageActivity : AppCompatActivity() {
                 Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun checkExistingReview(userUid: String, selectedSubject: String, callback: (Boolean) -> Unit) {
+        val id = intent.getStringExtra("professor_id") ?: ""
+        val reviewsRef = FirebaseDatabase.getInstance().getReference("Books").child(id).child("Reviews")
+
+        reviewsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var exists = false
+                for (reviewSnapshot in snapshot.children) {
+                    val review = reviewSnapshot.getValue(Review::class.java)
+                    if (review?.uid == userUid && review.subject == selectedSubject) {
+                        exists = true
+                        break
+                    }
+                }
+                callback(exists)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(false) // Return false if there's an error
+            }
+        })
+    }
+
 }

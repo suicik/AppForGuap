@@ -1,8 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Личный кабинет"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"/>
 
     <TextView
         android:id="@+id/tvEmail"
@@ -10,6 +19,7 @@
         android:layout_height="wrap_content"
         android:text="Email:"
         android:textSize="18sp"
+        android:layout_below="@id/tvHeader"
         android:layout_marginTop="20dp"/>
 
     <TextView
@@ -30,13 +40,42 @@
         android:layout_below="@id/tvGroup"
         android:layout_marginTop="20dp"/>
 
+    <TextView
+        android:id="@+id/tvReviewsHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ваши отзывы"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_below="@id/tvUserType"
+        android:layout_marginTop="20dp"/>
+
+    <ScrollView
+        android:id="@+id/reviewsScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_below="@id/tvReviewsHeader"
+        android:layout_above="@id/btnLogout"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:contentDescription="Список отзывов">
+
+        <LinearLayout
+            android:id="@+id/reviewsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        </LinearLayout>
+    </ScrollView>
+
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="147dp"
         android:layout_height="48dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginTop="20dp"
         android:background="@drawable/buttonshape"
         android:text="Выход"
-        android:textColor="@color/white"
-        android:layout_below="@id/tvUserType" />
+        android:textColor="@color/white"/>
 </RelativeLayout>
