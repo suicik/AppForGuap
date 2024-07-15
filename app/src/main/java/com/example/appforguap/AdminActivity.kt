@@ -1,6 +1,8 @@
 package com.example.appforguap
 
 import android.app.ProgressDialog
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -50,6 +52,31 @@ class AdminActivity : AppCompatActivity() {
         binding.addGroupsToBd.setOnClickListener {
             extractGroupOptions()
         }
+
+        binding.logOutAdmin.setOnClickListener {
+            signOut(this)
+            Toast.makeText(this, "Выход прошёл успешно", Toast.LENGTH_SHORT).show()
+
+            // Start RegisterActivity with a flag indicating logout
+            val intent = Intent(this, RegisterActivity::class.java).apply {
+                putExtra("LOGGED_OUT", true) // Pass the flag
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear the stack
+            }
+
+            startActivity(intent)
+            finish()
+        }
+
+
+    }
+    fun signOut(context: Context) {
+        FirebaseAuth.getInstance().signOut()
+
+        // Очистка SharedPreferences
+        val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()
+        editor.apply()
     }
 
     private fun parseFilters() {

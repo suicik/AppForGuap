@@ -57,6 +57,8 @@ class RegisterActivity : AppCompatActivity() {
         // Button visibility and behavior
         binding.buttonForRegister.isVisible = false
         binding.buttonForRegister.isEnabled = false
+        binding.etGroup.isVisible = false
+        binding.etGroup.isEnabled = false
 
         binding.clickToRegister.setOnClickListener {
             toggleRegistrationView(true)
@@ -79,7 +81,35 @@ class RegisterActivity : AppCompatActivity() {
             clearFields()
         }
     }
+    private fun checkGroup(group_: String, callback: (Boolean) -> Unit) {
+        // Получаем ссылку на сущность Group
+        val databaseReference = FirebaseDatabase.getInstance().getReference("Groups")
 
+        // Слушаем изменения данных
+        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var found = false
+
+                // Проходимся по всем дочерним сущностям
+                for (child in snapshot.children) {
+                    val text = child.child("text").getValue(String::class.java)
+                    if (text != null && text == group_) {
+                        found = true
+                        break // Прерываем цикл, т.к. совпадение найдено
+                    }
+                }
+
+                // Возвращаем результат через колбэк
+                callback(found)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Обработка ошибки
+                callback(false)
+                println("Ошибка при работе с базой данных: ${error.message}")
+            }
+        })
+    }
     private fun validateData() {
         email_ = binding.etEmail.text.toString().trim()
         password_ = binding.etPassword.text.toString().trim()
@@ -91,11 +121,19 @@ class RegisterActivity : AppCompatActivity() {
             Toast.makeText(this, "Введите email, неправильный формат", Toast.LENGTH_SHORT).show()
         } else if (password_.isEmpty()) {
             Toast.makeText(this, "Введите пароль, поле пусто", Toast.LENGTH_SHORT).show()
-        } else if (group_.isEmpty()) {
-            Toast.makeText(this, "Введите группу, поле пусто", Toast.LENGTH_SHORT).show()
         } else {
             if (binding.buttonForRegister.isEnabled) {
-                createUserAcc()
+                if (group_.isEmpty()){
+                    Toast.makeText(this, "Введите группу, поле пусто", Toast.LENGTH_SHORT).show()
+                } else {
+                    checkGroup(group_) { found ->
+                        if (!found) {
+                            Toast.makeText(this, "Введите корректную группу", Toast.LENGTH_SHORT).show()
+                        } else {
+                            createUserAcc()
+                        }
+                    }
+                }
             } else {
                 loginUser()
             }
@@ -214,6 +252,8 @@ class RegisterActivity : AppCompatActivity() {
         binding.clickToRegister.isEnabled = !isRegister
         binding.buttonForRegister.isVisible = isRegister
         binding.buttonForRegister.isEnabled = isRegister
+        binding.etGroup.isVisible = isRegister
+        binding.etGroup.isEnabled = isRegister
     }
 
     private fun clearFields() {

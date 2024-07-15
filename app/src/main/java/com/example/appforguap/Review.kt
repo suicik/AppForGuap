@@ -56,7 +56,7 @@ class ReviewsAdapter(private val reviews: List<Review>) : RecyclerView.Adapter<R
             reviewTextView.text = review.review
             reviewSubjectTextView.text = review.subject
             getUserData(review.uid) { userEmail, userGroup ->
-                reviewNumberTextView.text = "Email: $userEmail, Группа: $userGroup"
+                reviewNumberTextView.text = "$userEmail | $userGroup"
             }
         }
     }
