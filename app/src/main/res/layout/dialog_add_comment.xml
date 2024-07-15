@@ -25,18 +25,18 @@
         android:textSize="16sp" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id = "@+id/commentText"
+        android:id="@+id/commentText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop = "3dp"
-        android:hint="Comment"
-        android:layout_below="@id/spinner">
+        android:layout_below="@id/spinner"
+        android:layout_marginTop="3dp"
+        android:hint="Вводите комментарий сюда:">
 
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id = "@+id/commentEditText"
+            android:id="@+id/commentEditText"
             android:layout_width="match_parent"
-            android:layout_height="59dp"
+            android:layout_height="336dp"
             android:inputType="textMultiLine|textCapSentences" />
     </com.google.android.material.textfield.TextInputLayout>
 

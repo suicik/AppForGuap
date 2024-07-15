@@ -187,6 +187,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun saveCredentialsIfChecked() {
         if (binding.rememberEnter.isChecked) {
+
             val editor = sharedPreferences.edit()
             editor.putString("email", email_)
             editor.putString("password", password_)

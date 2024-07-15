@@ -1,12 +1,22 @@
 package com.example.appforguap
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+
+fun checkUserLoggedIn(context: Context): Boolean {
+    val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    val userEmail = sharedPreferences.getString("email", null)
+    val userPassword = sharedPreferences.getString("password", null)
+    val userGroup = sharedPreferences.getString("group", null)
+    return userEmail != null && userPassword != null && userGroup != null
+}
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,9 +33,16 @@ class SplashActivity : AppCompatActivity() {
         //!1.Вот до этого момента
 
         Handler().postDelayed({
-            val intent = Intent(this@SplashActivity, RegisterActivity ::class.java )
-            startActivity(intent)
-            finish()
-        }, 2000)
+            if (checkUserLoggedIn(this)) {
+                // Пользователь уже вошел в систему
+                // Перенаправьте пользователя на главный экран или выполнение другой логики
+                startActivity(Intent(this@SplashActivity, ProfessorsActivity::class.java))
+                finish()
+            } else {
+                // Перенаправьте пользователя на экран входа в систему
+                startActivity(Intent(this@SplashActivity, RegisterActivity::class.java))
+                finish()
+            }
+        }, 1000)
     }
 }

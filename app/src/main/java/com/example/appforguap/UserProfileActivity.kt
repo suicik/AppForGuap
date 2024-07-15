@@ -1,5 +1,6 @@
 package com.example.appforguap
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
@@ -46,7 +47,7 @@ class UserProfileActivity : AppCompatActivity() {
         loadUserProfile()
 
         btnLogout.setOnClickListener {
-            firebaseAuth.signOut()
+            signOut(this)
             Toast.makeText(this, "Выход прошёл успешно", Toast.LENGTH_SHORT).show()
 
             // Start RegisterActivity with a flag indicating logout
@@ -61,7 +62,15 @@ class UserProfileActivity : AppCompatActivity() {
 
 
     }
+    fun signOut(context: Context) {
+        FirebaseAuth.getInstance().signOut()
 
+        // Очистка SharedPreferences
+        val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()
+        editor.apply()
+    }
     private fun loadUserProfile() {
         val firebaseUser = firebaseAuth.currentUser
         if (firebaseUser != null) {
