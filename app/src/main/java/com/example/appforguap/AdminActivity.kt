@@ -16,7 +16,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import java.io.IOException
-import kotlin.concurrent.thread
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class AdminActivity : AppCompatActivity() {
     private lateinit var  binding: ActivityAdminBinding
@@ -45,6 +46,10 @@ class AdminActivity : AppCompatActivity() {
                 parseAllProfessors()
             }.start()
         }
+
+        binding.addGroupsToBd.setOnClickListener {
+            extractGroupOptions()
+        }
     }
 
     private fun parseFilters() {
@@ -69,6 +74,8 @@ class AdminActivity : AppCompatActivity() {
         for (element in elements) {
             val timestamp = System.currentTimeMillis()
             val hashMap = HashMap<String, Any>()
+            if (element.attr("value").trim() == "0")
+                continue
             hashMap["id"] = "$timestamp"
             hashMap["value"] = element.attr("value").trim()
             hashMap["text"] = element.text().trim()
@@ -181,6 +188,45 @@ class AdminActivity : AppCompatActivity() {
         } catch (e: IOException) {
             println("Ошибка при парсинге страницы преподавателя $url: ${e.message}")
             Pair(emptyList(), emptyList())
+        }
+    }
+
+    private fun extractGroupOptions() {
+        progressDialog.show()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val url = "https://raspsess.guap.ru"
+                val selector = "select[name='ctl00\$cphMain\$ctl03'] option"
+                val document = Jsoup.connect(url).get()
+                val groups = document.select(selector)
+
+                for (group in groups) {
+                    val timestamp = System.currentTimeMillis()
+                    val hashMap = HashMap<String, Any>()
+                    if (group.attr("value").trim() == "-1")
+                        continue
+                    hashMap["id"] = "$timestamp"
+                    hashMap["value"] = group.attr("value").trim()
+                    hashMap["text"] = group.text().trim()
+                    hashMap["timestamp"] = timestamp
+                    hashMap["uid"] = "${firebaseAuth.uid}"
+
+                    val ref = FirebaseDatabase.getInstance().getReference("Groups")
+                    ref.child("$timestamp").setValue(hashMap).addOnSuccessListener {
+                        // Optionally show success message for each group
+                    }.addOnFailureListener { e ->
+                        // Handle failure
+                        println("Failed to add group: ${e.message}")
+                    }
+                }
+            } catch (e: IOException) {
+                println("Error fetching groups: ${e.message}")
+            } finally {
+                withContext(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                }
+            }
         }
     }
 
