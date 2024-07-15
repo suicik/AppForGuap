@@ -15,7 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import androidx.appcompat.app.AlertDialog
 import android.widget.EditText
-
+import androidx.core.view.isVisible
 
 
 class UserProfileActivity : AppCompatActivity() {
@@ -25,7 +25,7 @@ class UserProfileActivity : AppCompatActivity() {
     private lateinit var tvUserType: TextView
     private lateinit var btnLogout: Button
     private lateinit var reviewsLayout: LinearLayout
-
+    private lateinit var btnToAdmin: Button
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var databaseReference: DatabaseReference
@@ -39,13 +39,20 @@ class UserProfileActivity : AppCompatActivity() {
         tvUserType = findViewById(R.id.tvUserType)
         btnLogout = findViewById(R.id.btnLogout)
         reviewsLayout = findViewById(R.id.reviewsLayout)
+        btnToAdmin = findViewById(R.id.to_admin_panel)
 
         firebaseAuth = FirebaseAuth.getInstance()
         firebaseDatabase = FirebaseDatabase.getInstance()
         databaseReference = firebaseDatabase.getReference("Users")
 
+        btnToAdmin.isVisible =false
+        btnToAdmin.isEnabled = false
+
         loadUserProfile()
 
+        btnToAdmin.setOnClickListener{
+            startActivity(Intent(this@UserProfileActivity, AdminActivity::class.java))
+        }
         btnLogout.setOnClickListener {
             signOut(this)
             Toast.makeText(this, "Выход прошёл успешно", Toast.LENGTH_SHORT).show()
@@ -82,7 +89,10 @@ class UserProfileActivity : AppCompatActivity() {
                             val email = snapshot.child("email").value.toString()
                             val group = snapshot.child("group").value.toString()
                             val userType = snapshot.child("userType").value.toString()
-
+                            if (userType == "admin"){
+                                btnToAdmin.isVisible =true
+                                btnToAdmin.isEnabled = true
+                            }
                             tvEmail.text = "Email: $email"
                             tvGroup.text = "Группа: $group"
                             tvUserType.text = "Права: ${userType.replaceFirstChar { it.uppercase() }}"

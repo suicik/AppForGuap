@@ -66,6 +66,9 @@ class AdminActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+        binding.toProfessorsAdmin.setOnClickListener{
+            startActivity(Intent(this@AdminActivity, ProfessorsActivity::class.java))
+        }
 
 
     }

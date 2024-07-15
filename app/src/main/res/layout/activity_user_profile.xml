@@ -78,4 +78,15 @@
         android:background="@drawable/buttonshape"
         android:text="Выход"
         android:textColor="@color/white"/>
+
+    <Button
+        android:id="@+id/to_admin_panel"
+        android:layout_width="147dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/buttonshape"
+        android:text="В админку"
+        android:textColor="@color/white" />
 </RelativeLayout>
