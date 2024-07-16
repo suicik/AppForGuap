@@ -3,6 +3,7 @@ package com.example.appforguap
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -60,9 +61,23 @@ class ProfessorPageActivity : AppCompatActivity() {
         ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 reviewsList.clear()
+
                 for (reviewSnapshot in snapshot.children) {
-                    val review = reviewSnapshot.getValue(Review::class.java)
-                    review?.let { reviewsList.add(it) }
+                    val map = reviewSnapshot.value as? Map<*, *>
+                    val review = map?.let {
+                        Review(
+                            id = it["id"] as? String ?: "",
+                            professorId = it["professorId"] as? String ?: "",
+                            timestamp = it["timestamp"] as? String ?: "",
+                            subject = it["subject"] as? String ?: "",
+                            review = it["review"] as? String ?: "",
+                            uid = it["uid"] as? String ?: "",
+                            isAnonymous = it["isAnonymous"] as? Boolean ?: false
+                        )
+                    }
+                    if (review != null) {
+                        reviewsList.add(review)
+                    }
                 }
                 reviewsAdapter.notifyDataSetChanged()
             }
@@ -113,29 +128,29 @@ class ProfessorPageActivity : AppCompatActivity() {
                 val selectedSubject = reviewAddBinding.spinner.selectedItem.toString()
                 checkExistingReview(user.uid, selectedSubject) { hasReview ->
                     if (!hasReview) {
-                        // No existing review for the selected subject
                         val review = reviewAddBinding.commentEditText.text.toString().trim()
 
                         if (review.isEmpty()) {
                             Toast.makeText(this, "Ошибка: Отзыв не может быть пустым", Toast.LENGTH_SHORT).show()
                         } else {
                             alertDialog.dismiss()
-                            addReviewToFirebase(review, selectedSubject)
+                            val isAnonymous = reviewAddBinding.anonymousCheckBox.isChecked // Get checkbox state
+                            addReviewToFirebase(review, selectedSubject, isAnonymous)
                         }
                     } else {
-                        // User has already left a review for this subject
                         Toast.makeText(this, "Вы уже оставляли отзыв для этого предмета", Toast.LENGTH_SHORT).show()
                     }
                 }
             } ?: run {
-                // If the user is not authenticated
                 Toast.makeText(this, "Пожалуйста, авторизуйтесь", Toast.LENGTH_SHORT).show()
             }
         }
+
     }
 
 
-    private fun addReviewToFirebase(review: String, selectedSubject: String) {
+
+    private fun addReviewToFirebase(review: String, selectedSubject: String, isAnonymous: Boolean) {
         progressDialog.setMessage("Добавляем отзыв")
         progressDialog.show()
 
@@ -147,7 +162,8 @@ class ProfessorPageActivity : AppCompatActivity() {
             put("subject", selectedSubject)
             put("timestamp", timestamp)
             put("review", review)
-            put("uid", "${firebaseAuth.uid}")
+            put("uid", "${firebaseAuth.uid}") // Keep original UID
+            put("isAnonymous", isAnonymous) // New field for anonymity
         }
 
         val ref = FirebaseDatabase.getInstance().getReference("Books")
@@ -162,6 +178,7 @@ class ProfessorPageActivity : AppCompatActivity() {
                 Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun checkExistingReview(userUid: String, selectedSubject: String, callback: (Boolean) -> Unit) {
         val id = intent.getStringExtra("professor_id") ?: ""

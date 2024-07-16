@@ -141,7 +141,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun loginUser() {
-        progressDialog.setMessage("Logging in...")
+        progressDialog.setMessage("Осуществялется вход...")
         progressDialog.show()
 
         firebaseAuth.signInWithEmailAndPassword(email_, password_)
@@ -169,7 +169,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun checkUser() {
-        progressDialog.setMessage("Checking User...")
+        progressDialog.setMessage("Проверка пользователя...")
 
         val firebaseUser = firebaseAuth.currentUser!!
 

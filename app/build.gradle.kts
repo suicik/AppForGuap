@@ -69,6 +69,7 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.2.1")
     implementation ("com.squareup.picasso:picasso:2.71828")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation ("com.google.android.material:material:1.6.0")
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.auth)

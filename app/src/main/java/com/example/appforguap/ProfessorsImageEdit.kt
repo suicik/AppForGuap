@@ -3,16 +3,50 @@ package com.example.appforguap
 import android.content.Context
 import android.graphics.*
 import android.widget.ImageView
-import com.squareup.picasso.*
+import android.media.ExifInterface
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Transformation
+import java.io.IOException
+import java.net.URL
+import kotlinx.coroutines.*
+import java.io.InputStream
 
 
-// Трансформация изображения (Можно вынести в отдельный файл)
+
 fun loadImageWithRotation(context: Context, imageUrl: String, imageView: ImageView) {
-    Picasso.get()
-        .load(imageUrl)
-        .transform(RoundedCornersTransformation(75))
-        .into(imageView)
+    CoroutineScope(Dispatchers.Main).launch {
+        val rotationAngle = withContext(Dispatchers.IO) {
+            getExifRotationAngle(imageUrl)
+        }
+
+        Picasso.get()
+            .load(imageUrl)
+            .transform(RotationTransformation(rotationAngle))
+            .transform(RoundedCornersTransformation(75))
+            .into(imageView)
+    }
 }
+
+private suspend fun getExifRotationAngle(imageUrl: String): Float {
+    return try {
+        withContext(Dispatchers.IO) {
+            val inputStream: InputStream = URL(imageUrl).openStream()
+            val exif = ExifInterface(inputStream)
+            val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+        0f
+    }
+}
+
 // Функция для округления изображения преподавателей (Можно вынести в отдельный файл)
 class RoundedCornersTransformation(private val radius: Int) : Transformation {
 
@@ -58,5 +92,25 @@ class RoundedCornersTransformation(private val radius: Int) : Transformation {
         }
 
         return output
+    }
+}
+
+class RotationTransformation(private val rotationAngle: Float) : Transformation {
+
+    override fun key(): String {
+        return "rotate_$rotationAngle"
+    }
+
+    override fun transform(source: Bitmap): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(rotationAngle)
+
+        val rotatedBitmap = Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+
+        if (source != rotatedBitmap) {
+            source.recycle()
+        }
+
+        return rotatedBitmap
     }
 }

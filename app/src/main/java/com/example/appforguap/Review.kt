@@ -1,5 +1,6 @@
 package com.example.appforguap
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.firestore.auth.User
 
-data class UserForReviw(
+data class UserForReview(
     val email: String = "",
     val group: String = ""
 )
@@ -21,22 +22,23 @@ data class Review(
     val timestamp: String = "",
     val subject: String = "",
     val review: String = "",
-    val uid: String = ""
-) {
-
-}
+    val uid: String = "",
+    val isAnonymous: Boolean = false
+)
 
 class ReviewsAdapter(private val reviews: List<Review>) : RecyclerView.Adapter<ReviewsAdapter.ReviewViewHolder>() {
 
-
-
     class ReviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val reviewTextView: TextView = itemView.findViewById(R.id.reviewTextView)
+        private val reviewNumberTextView: TextView = itemView.findViewById(R.id.reviewNumberTextView)
+        private val reviewSubjectTextView: TextView = itemView.findViewById(R.id.reviewSubjectTextView)
+
         private fun getUserData(uid: String, callback: (String, String) -> Unit) {
             val databaseRef = FirebaseDatabase.getInstance().getReference("Users/$uid")
 
             databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val user = snapshot.getValue(UserForReviw::class.java)
+                    val user = snapshot.getValue(UserForReview::class.java)
                     if (user != null) {
                         callback(user.email, user.group)
                     } else {
@@ -49,17 +51,22 @@ class ReviewsAdapter(private val reviews: List<Review>) : RecyclerView.Adapter<R
                 }
             })
         }
-        private val reviewTextView: TextView = itemView.findViewById(R.id.reviewTextView)
-        private val reviewNumberTextView: TextView = itemView.findViewById(R.id.reviewNumberTextView)
-        private val reviewSubjectTextView: TextView = itemView.findViewById(R.id.reviewSubjectTextView)
+
         fun bind(position: Int, review: Review) {
             reviewTextView.text = review.review
             reviewSubjectTextView.text = review.subject
-            getUserData(review.uid) { userEmail, userGroup ->
-                reviewNumberTextView.text = "$userEmail | $userGroup"
+            Log.d("Reviews", "Review: $review")
+
+            if (review.isAnonymous == true) {
+                reviewNumberTextView.text = "Анонимный отзыв"
+            } else {
+                getUserData(review.uid) { userEmail, userGroup ->
+                    reviewNumberTextView.text = "$userEmail | $userGroup"
+                }
             }
         }
     }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_review, parent, false)
@@ -72,4 +79,3 @@ class ReviewsAdapter(private val reviews: List<Review>) : RecyclerView.Adapter<R
 
     override fun getItemCount(): Int = reviews.size
 }
-

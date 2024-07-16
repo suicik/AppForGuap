@@ -15,6 +15,7 @@ import android.util.Log
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import android.app.ProgressDialog
 
 data class Professor(
     val id: String,
@@ -47,16 +48,22 @@ class ProfessorsActivity : AppCompatActivity() {
     private var allProfessors: List<Professor> = listOf()
     private var filters: Filters? = null
     private var currentFilters: CurrentFilters = CurrentFilters()
+    private lateinit var progressDialog: ProgressDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfessorsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         enableEdgeToEdge()
         firebaseAuth = FirebaseAuth.getInstance()
         firebaseDatabase = FirebaseDatabase.getInstance()
         checkUser()
+
+        progressDialog = ProgressDialog(this)
+        progressDialog.setTitle("Пожалуйста ожидайте")
+        progressDialog.setCanceledOnTouchOutside(false)
 
         recyclerView = binding.recyclerView
         searchView = binding.searchView
@@ -77,6 +84,8 @@ class ProfessorsActivity : AppCompatActivity() {
         }
         recyclerView.adapter = adapter
 
+        progressDialog.setMessage("Загрузка списка преподавателей...")
+
         fetchFilters()
         fetchProfessors()
 
@@ -95,17 +104,22 @@ class ProfessorsActivity : AppCompatActivity() {
     }
 
     private fun fetchFilters() {
+        progressDialog.setMessage("Загрузка фильтров...")
+        progressDialog.show() // Show progress dialog
         fetchFiltersFromFirebase(
             onSuccess = { fetchedFilters ->
                 filters = fetchedFilters
                 Log.d("Firebase", "Фильтры успешно получены: $filters")
+                progressDialog.dismiss() // Dismiss progress dialog
             },
             onFailure = { exception ->
                 Log.e("Firebase", "Ошибка при получении списка фильтров", exception)
                 Toast.makeText(this, "Ошибка при получении списка фильтров: ${exception.message}", Toast.LENGTH_LONG).show()
+                progressDialog.dismiss() // Dismiss progress dialog on failure
             }
         )
     }
+
 
     fun fetchFiltersFromFirebase(onSuccess: (Filters) -> Unit, onFailure: (Exception) -> Unit) {
         val filtersRef = firebaseDatabase.reference
@@ -163,12 +177,16 @@ class ProfessorsActivity : AppCompatActivity() {
     }
 
     private fun fetchProfessors() {
+        progressDialog.setMessage("Загрузка списка преподавателей...")
+        progressDialog.show() // Show progress dialog
         firebaseDatabase.getReference("Proffesors").get().addOnSuccessListener { dataSnapshot ->
             allProfessors = dataSnapshot.children.mapNotNull { it.getValue(Professor::class.java) }
             adapter.updateList(allProfessors)
+            progressDialog.dismiss() // Dismiss progress dialog
         }.addOnFailureListener { e ->
             Log.e("fetchProfessors", "Ошибка при получении списка преподавателей", e)
-            // Handle error (e.g., show toast, retry mechanism, etc.)
+            Toast.makeText(this, "Ошибка при получении списка преподавателей", Toast.LENGTH_LONG).show()
+            progressDialog.dismiss() // Dismiss progress dialog on failure
         }
     }
 
